@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>고요 속의 외침</title>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.29.1/moment.min.js"></script>
+    </head>
+    <body>
+        <h2>🔇 고요 속의 외침</h2>
+        할 말이 턱 끝까지 차오르지만 입 밖으로 꺼내지 못할 때, 털어 놓을 곳이 없을 때, 답답함에 크게 소리 지르고 싶을 때, 고요 속에서 외치세요.
+        <form action="" onsubmit="sendMessage(event)" style="padding: 10px 0px">
+            <input type="text" id="messageText" autocomplete="off"/>
+            <button>외치기</button>
+        </form>
+        <div id='messages'>
+        </div>
+        <script>
+            const ws = new WebSocket("ws://localhost:8000/api/v1/shout");
+            ws.onmessage = function(event) {
+                const messages = document.getElementById('messages')
+                const message = document.createElement('div')
+                const data = JSON.parse(event.data)
+                const content = data.content
+                const timestamp= moment(Date(data.timestamp)).format("hh:mm:ss a")
+                message.appendChild(document.createTextNode(`"${content}" at ${timestamp}`))
+                message.appendChild(document.createElement('hr'))
+                messages.appendChild(message)
+            };
+            function sendMessage(event) {
+                const input = document.getElementById("messageText")
+                const timestamp = new Date().getTime()
+                const data = {"content": input.value, "timestamp": timestamp}
+                ws.send(JSON.stringify(data))
+                input.value = ''
+                event.preventDefault()
+            }
+        </script>
+    </body>
+</html>
