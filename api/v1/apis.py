@@ -1,18 +1,22 @@
-from fastapi import APIRouter, WebSocket
-from starlette.websockets import WebSocketDisconnect
+import logging
 
-from connect_manager import ConnectionManager
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+
+from core.websocket_manager import WebsocketManager
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/v1", tags=["v1"])
-manager = ConnectionManager()
+websocket_manager = WebsocketManager()
 
 
 @router.websocket("/shout")
 async def shout(websocket: WebSocket):
-    await manager.connect(websocket)
+    await websocket_manager.connect(websocket)
     try:
         while True:
             data = await websocket.receive_text()
-            await manager.broadcast(data)
-    except WebSocketDisconnect:
-        await manager.disconnect(websocket)
+            await websocket_manager.broadcast(data)
+    except WebSocketDisconnect as exc:
+        await websocket_manager.disconnect(websocket)
+        logger.exception(exc)
