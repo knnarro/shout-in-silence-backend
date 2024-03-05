@@ -1,8 +1,11 @@
 import asyncio
+import logging
 
 from fastapi import WebSocket
 
 from core.redis_manager import RedisPubSubManager
+
+logger = logging.getLogger(__name__)
 
 
 class WebsocketManager:
@@ -15,18 +18,19 @@ class WebsocketManager:
         self.active_connections.append(websocket)
         await self.pubsub_client.connect()
         subscriber = await self.pubsub_client.subscribe("shout")
-        asyncio.create_task(self._listen_pubsub(subscriber))
+        logger.info(f"Websocket connected {websocket}")
+        asyncio.create_task(self._listen_and_send(subscriber, websocket))
 
     async def disconnect(self, websocket: WebSocket):
         self.active_connections.remove(websocket)
         await self.pubsub_client.unsubscribe("shout")
+        logger.info(f"Websocket disconnected {websocket}")
 
     async def broadcast(self, message: str):
         await self.pubsub_client.publish("shout", message)
 
-    async def _listen_pubsub(self, subscriber):
+    async def _listen_and_send(self, subscriber, websocket):
         while True:
             message = await subscriber.get_message(ignore_subscribe_messages=True)
             if message is not None:
-                for connection in self.active_connections:
-                    await connection.send_text(message["data"].decode("utf-8"))
+                await websocket.send_text(message["data"].decode("utf-8"))
