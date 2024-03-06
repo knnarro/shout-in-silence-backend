@@ -5,10 +5,10 @@ from core import settings
 
 class RedisPubSubManager:
     def __init__(self):
-        self.redis_host = settings.REDIS_HOST
-        self.redis_port = settings.REDIS_PORT
-        self.redis_connection = None
-        self.pubsub = None
+        self.redis_host: str = settings.REDIS_HOST
+        self.redis_port: int = settings.REDIS_PORT
+        self.redis_connection: aioredis.Redis | None = None
+        self.pubsub: aioredis.Redis.pubsub = None
 
     async def _get_redis_connection(self) -> aioredis.Redis:
         return aioredis.Redis(host=self.redis_host, port=self.redis_port)
