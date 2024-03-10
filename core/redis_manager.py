@@ -20,6 +20,15 @@ class RedisPubSubManager:
     async def publish(self, channel: str, message: str) -> None:
         await self.redis_connection.publish(channel, message)
 
+    async def increase(self, channel: str) -> None:
+        await self.redis_connection.incr(channel)
+
+    async def get(self, channel: str) -> any:
+        return await self.redis_connection.get(channel)
+
+    async def set(self, channel: str, value: any) -> None:
+        await self.redis_connection.set(channel, value)
+
     async def subscribe(self, channel: str) -> aioredis.Redis.pubsub:
         await self.pubsub.subscribe(channel)
         return self.pubsub

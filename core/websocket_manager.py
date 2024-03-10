@@ -28,14 +28,14 @@ class WebsocketManager:
         logger.info(f"Websocket disconnected {websocket}")
 
     async def broadcast(self, message: str):
-        await self.pubsub_client.redis_connection.incr("count")
+        await self.pubsub_client.increase("count")
         await self.pubsub_client.publish("shout", message)
 
     async def _listen_and_send(self, subscriber, websocket):
         while True:
             message = await subscriber.get_message(ignore_subscribe_messages=True)
             if message is not None:
-                count = await self.pubsub_client.redis_connection.get("count")
+                count = await self.pubsub_client.get("count")
                 count = int(count) if count else 0
                 body = json.loads(message["data"].decode("utf-8"))
                 body["count"] = count
