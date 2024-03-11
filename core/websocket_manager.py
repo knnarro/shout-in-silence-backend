@@ -4,6 +4,7 @@ import logging
 
 from fastapi import WebSocket
 
+from core.mongodb import mongo_db
 from core.redis_manager import RedisPubSubManager
 
 logger = logging.getLogger(__name__)
@@ -30,6 +31,7 @@ class WebsocketManager:
     async def broadcast(self, message: str):
         await self.pubsub_client.increase("count")
         await self.pubsub_client.publish("shout", message)
+        await mongo_db["messages"].insert_one(json.loads(message))
 
     async def _listen_and_send(self, subscriber, websocket):
         while True:
